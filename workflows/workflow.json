@@ -1,0 +1,113 @@
+{
+  "name": "Open Innovation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "analyze-network",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-900, 20],
+      "id": "0821717c-09bd-4052-9298-58d6a055e695",
+      "webhookId": "a26c3448-d5d5-4f14-ac18-ba2c1b9a6547"
+    },
+    {
+      "parameters": {
+        "functionCode": "const json = $json.body?.body || $json.body || $json;\nconst dataBuffer = Buffer.from(JSON.stringify(json));\n\nreturn [{\n  json: {},\n  binary: {\n    data: {\n      data: dataBuffer,\n      mimeType: 'application/json',\n      fileName: 'network_input.json',\n    }\n  }\n}];\n"
+      },
+      "name": "JSON to Binary File",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [-660, 20],
+      "id": "36328d06-285a-4565-a541-3586d78e02ef"
+    },
+    {
+      "parameters": {
+        "command": "python3 /data/generate_network.py /data/network_input.json /data/"
+      },
+      "name": "Execute Python Script",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [-200, 20],
+      "id": "3edc32a1-7920-488a-a6b5-4b67bbbb25fb"
+    },
+    {
+      "parameters": {
+        "filePath": "/data/network_full.png"
+      },
+      "name": "Read Full Network Image",
+      "type": "n8n-nodes-base.readBinaryFile",
+      "typeVersion": 1,
+      "position": [20, -80],
+      "id": "2cbb28a7-0ed9-46dc-98b7-2dab1c382236"
+    },
+    {
+      "parameters": {
+        "filePath": "/data/network_infected.png"
+      },
+      "name": "Read Infected Network Image",
+      "type": "n8n-nodes-base.readBinaryFile",
+      "typeVersion": 1,
+      "position": [20, 120],
+      "id": "32da5c48-900b-4696-82a4-021439974d61"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [420, 20],
+      "id": "1a25fc58-0b83-4f7b-9fda-c4e4233bc19f"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "/data/network_input.json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [-420, 20],
+      "id": "c48c66d7-2dd3-4746-bc30-f6cb7a62f1d5",
+      "name": "Read/Write Files from Disk"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [[{ "node": "JSON to Binary File", "type": "main", "index": 0 }]]
+    },
+    "JSON to Binary File": {
+      "main": [[{ "node": "Read/Write Files from Disk", "type": "main", "index": 0 }]]
+    },
+    "Execute Python Script": {
+      "main": [
+        [{ "node": "Read Full Network Image", "type": "main", "index": 0 }],
+        [{ "node": "Read Infected Network Image", "type": "main", "index": 0 }]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [[{ "node": "Execute Python Script", "type": "main", "index": 0 }]]
+    },
+    "Read Full Network Image": {
+      "main": [[{ "node": "Respond to Webhook", "type": "main", "index": 0 }]]
+    },
+    "Read Infected Network Image": {
+      "main": [[{ "node": "Respond to Webhook", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "instanceId": "3f927dba4647c6bf9f91256d787d87ab009c96b1985810f98ca728060d1dd86b"
+  },
+  "tags": []
+}
